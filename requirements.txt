@@ -1,0 +1,4 @@
+# Contributor tooling — install once per clone
+# pip install -r requirements.txt
+
+nbstripout>=0.7.1
