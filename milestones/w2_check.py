@@ -29,10 +29,11 @@ REPO = HERE.parent                        # repo ildizi
 MODULES = REPO / "capstone" / "modules"
 sys.path.insert(0, str(MODULES))
 
-NEWS_DATA = REPO / "course" / "practices" / "d02_checkpoints" / "uz_news_mini.txt"
-SENT_DATA = REPO / "course" / "practices" / "d03_checkpoints" / "uz_sentiment_mini.txt"
-VEC_DATA  = REPO / "course" / "practices" / "d04_checkpoints" / "uz_mini.vec"
-LM_DATA   = REPO / "course" / "practices" / "d05_checkpoints" / "uz_news_corpus.txt"
+
+NEWS_DATA = REPO / "practices" / "d02_checkpoints" / "uz_news_mini.txt"
+SENT_DATA = REPO / "practices" / "d03_checkpoints" / "uz_sentiment_mini.txt"
+VEC_DATA  = REPO / "practices" / "d04_checkpoints" / "uz_mini.vec"
+LM_DATA   = REPO / "practices" / "d05_checkpoints" / "uz_news_corpus.txt"
 
 _passed = 0
 
