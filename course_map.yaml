@@ -1,0 +1,1104 @@
+# course_map.yaml — NLP Professional Development Course
+# VMQ 425-son, 64-son loyiha | KALENDAR ISH REJASI
+# 15-iyun – 10-iyul 2026 | 16 ta dars kuni + 4 ta chorshanba milestone
+#
+# SINGLE SOURCE OF TRUTH. No artifact may be produced for a day whose row
+# is not approved. All lecture_topic and practice_topic values are verbatim
+# from the official "KALENDAR ISH REJASI" annex tables.
+#
+# Scheduling rule (approved):
+#   Day 1 morning = Orientation (absorbs P1 item 1 — environment setup)
+#   Day 1 lecture  = L1
+#   Day N morning  = P(N-1)   for N = 2..16
+#   Day N lecture  = L(N)     for N = 2..16
+#   P16 (FastAPI/Docker) = M4 milestone (8-iyul) — fully worked PRIMM, no core scaffold
+#
+# Hour accounting (SETTLED):
+#   Lecture hours : L1–L16 on Days 1–16 = 16 × 2h = 32h ✓
+#   Practice hours: P1–P15 on Days 2–16 = 15 × 2h = 30h
+#                 + P16 on M4           =  1 × 2h =  2h
+#                                                   ────
+#                                                    32h ✓
+#   Orientation (Day 1 morning, 2h): BONUS contact, NOT folded into P1.
+#     - Official curriculum total = 32 + 32 = 64h (matches VMQ contract).
+#     - Total contact including orientation = 66h.
+#     - P1 (Day 2) skips environment setup because orientation absorbed P1 item 1.
+#   Total curriculum: 32 + 32 = 64h ✓  |  Total contact: 66h
+
+meta:
+  course:   "Tabiiy tilni qayta ishlash (NLP)"
+  contract: "VMQ 425-son, 64-son loyiha"
+  executor: "Atadjanov Ibragim Ravshonbekovich"
+  dates:    "2026-06-15 – 2026-07-10"
+  schedule: "Du/Se/Pa/Ju dars kunlari; Chorshanba milestone (async)"
+  capstone: "O'zbek-tili hujjat yordamchisi (Uzbek Document Assistant)"
+  practice_slot: "09:30–10:50 (I.R. Atadjanov)"
+  lecture_slot:  "11:00–12:20 (A.A. Abdulali)"
+
+# Deliverable formats (approved — PPTX not required; beamer→PDF is settled).
+# Pull-time license confirmation required before any dataset is committed to a notebook.
+artifact_formats:
+  lecture:          "LaTeX Beamer → course/lectures/dNN_topic.pdf"
+  practice:         "Jupyter Notebook → course/practices/dNN_topic.ipynb"
+  milestone_brief:  "Markdown → course/milestones/wN_milestone.md"
+  milestone_check:  "Python script → course/milestones/wN_check.py"
+  qa_report:        "Markdown → course/qa/dNN_qa.md"
+  capstone_spec:    "Markdown → course/capstone/spec.md"
+  capstone_rubric:  "DOCX + XLSX → course/capstone/rubric.{docx,xlsx}"
+  final_test:       "DOCX + XLSX → course/final_test.{docx,xlsx}  (issued M4, due Day 15)"
+  licenses:         "Markdown → LICENSES.md  (repo root; updated each time a corpus is added)"
+  day1_orientation: "Markdown checklist + .ipynb env-check → course/day1_orientation/"
+
+# Dataset registry — all corpora used across the course.
+# Corpora with UNRESOLVED status must be approved before notebook production.
+corpus_registry:
+  uz_news_mini:
+    desc:    "200 o'zbek yangilik maqolasi (kun.uz, gazeta.uz)"
+    size:    "~100 KB text"
+    source:  "Kaggle Dataset — attached Day 1"
+    status:  APPROVED
+  uz_news_full:
+    desc:    "5 000 o'zbek yangilik maqolasi"
+    size:    "~2 MB text"
+    source:  "Kaggle Dataset — same attachment, larger split"
+    status:  APPROVED
+  cc_uz_100k_kv:
+    desc:    "Top-100k Word2Vec vektorlari (Common Crawl Uzbek, truncated .kv)"
+    size:    "~240 MB"
+    source:  "Kaggle Dataset — attached Day 4"
+    status:  APPROVED    # truncated from cc.uz per item 3 in review decisions
+  # ── C1 NER RESOLUTION ────────────────────────────────────────────────────
+  # HF Hub search (2026-06-13) found two candidates:
+  #   (a) risqaliyevds/uzbek_ner — MIT, 10K-100K, but WRONG FORMAT: entity
+  #       gazetteer (JSON lists of entity strings), NOT IOB2 labeled sentences.
+  #       Cannot be used to train a sequence labeler. May be used as a
+  #       supplementary gazetteer in post-processing if desired.
+  #   (b) ShakhzoDavronov/ner-prepared-uzbek — 19 609 IOB2 train examples
+  #       (created 2025-02-26), newer and larger than WikiANN, but NO LICENSE
+  #       declared and NO source attribution in README. License blocker.
+  # Verdict: neither candidate qualifies (a=wrong format, b=no license).
+  # Fallback per approved resolution: WikiANN-uz, train+dev combined (~200
+  # sentences). License basis: data derived from Wikipedia + Wikidata (CC-BY-SA
+  # 3.0 upstream); distributed for NLP research. Educational-use basis applies.
+  # Notebook explicitly states the data-scarcity limitation.
+  uz_ner_wikiann:
+    desc:    "WikiANN Uzbek NER — fallback after C1 HF search (unimelb-nlp/wikiann, uz config)"
+    url:     "https://huggingface.co/datasets/unimelb-nlp/wikiann"
+    size:    "300 rows total: train=100, dev=100, test=100; used as train+dev combined ≈200"
+    license: "CC-BY-SA 3.0 (upstream: Wikipedia/Wikidata); educational-use basis documented"
+    tags:    "IOB2 — B/I-{PER,LOC,ORG}"
+    ner_search_log: "see C1 comment block above"
+    status:  RESOLVED    # C1: WikiANN fallback approved. F1 will be low (~40-60%)
+                         # — pedagogically honest (demos Uzbek data-scarcity).
+                         # Notebook must state this limitation explicitly.
+  uz_ner_risqaliyev_ref:
+    desc:    "risqaliyevds/uzbek_ner — MIT, entity gazetteer (WRONG FORMAT for seq-label)"
+    url:     "https://huggingface.co/datasets/risqaliyevds/uzbek_ner"
+    license: "MIT"
+    size:    "10K-100K entities (JSON lists by category: LOC, ORG, PERSON, DATE, …)"
+    status:  NOT_USED    # Wrong format: entity list, not IOB2 sentences.
+                         # Kept as reference; may be used as gazetteer supplement.
+  uz_ner_shakhzod_ref:
+    desc:    "ShakhzoDavronov/ner-prepared-uzbek — 19 609 IOB2 examples (no license)"
+    url:     "https://huggingface.co/datasets/ShakhzoDavronov/ner-prepared-uzbek"
+    license: "not declared"
+    size:    "19 609 train examples (train split only, no dev/test)"
+    status:  NOT_USED    # No license, no source attribution. License blocker.
+                         # Revisit if author publishes license.
+  # ── C2 RESOLUTION ────────────────────────────────────────────────────────
+  uz_en_opus100:
+    desc:    "OPUS-100 Uzbek-English parallel corpus (Helsinki-NLP/opus-100, uz-en)"
+    url:     "https://huggingface.co/datasets/Helsinki-NLP/opus-100"
+    size:    "177 000 training sentence pairs; 20k subsample used in P11"
+    license: "unspecified (source corpora: CC/public-domain mix); widely used in NLP research"
+    scale:   "P11: max_len=50 tokens, vocab=8000 BPE, 5 epochs on T4 — demo-quality BLEU"
+    status:  RESOLVED    # C2 approved: educational/research use; license uncertainty
+                         # documented in LICENSES.md and in notebook header comment.
+                         # BLEU score stated as demo-quality (not production NMT).
+  # ── C3 RESOLUTION ────────────────────────────────────────────────────────
+  uz_wiki_summ:
+    desc:    "Wikipedia Uzbek lead-paragraph summarization pairs"
+    url:     "https://huggingface.co/datasets/wikimedia/wikipedia (uz subset)"
+    size:    "~2 000 juft tayyorlanadi (10-200 token xulosa / 50-500 token maqola)"
+    license: "CC-BY-SA 3.0"
+    derivation: >
+      Derived from the same uzwiki dump built in Stage 0B corpus pipeline —
+      NOT a separate download. First paragraph = 'xulosa', remainder = 'maqola'.
+      Standard lead-sentence proxy (Nallapati et al. 2016). No standard Uzbek
+      summarization dataset exists.
+    status:  RESOLVED    # C3 approved: CC-BY-SA, derived from own pipeline dump.
+  uz_sentiment_uzum:
+    desc:    "Uzum Market sharhlar sentimenti (risqaliyevds/uzbek-sentiment-analysis)"
+    url:     "https://huggingface.co/datasets/risqaliyevds/uzbek-sentiment-analysis"
+    size:    "352 151 qator; amaliyotda 5 000 (2 500 pos + 2 500 neg) subsample"
+    license: "MIT"
+    labels:  "reyting 1–5; binarizatsiya: {4,5}→ijobiy, {1,2}→salbiy, 3 tashlanadi"
+    status:  VERIFIED    # Real Uzbek sentiment dataset. MIT. Suitable for P13. ✓
+  uz_kb:
+    desc:    "Bilimlar bazasi: yangiliklar + lex.uz hujjatlar, 10 000 chunk, FAISS"
+    size:    "~20 MB text + ~80 MB FAISS index"
+    source:  "Kaggle Dataset — attached Day 15"
+    status:  APPROVED
+
+weeks:
+  1: {theme: "Klassik NLP: preprocessing, klassifikatsiya, embeddinglar, qidiruv",
+      days: [1,2,3,4], milestone: w1}
+  2: {theme: "Statistik modellar va neyron embeddinglar",
+      days: [5,6,7,8], milestone: w2}
+  3: {theme: "Rekurrent tarmoqlar va ketma-ketlik modellari",
+      days: [9,10,11,12], milestone: w3}
+  4: {theme: "Transfer learning, RAG, agentlar, deploy",
+      days: [13,14,15,16], milestone: w4}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SCHEDULE
+# ─────────────────────────────────────────────────────────────────────────────
+schedule:
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # WEEK 1
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  - type: teaching_day
+    day: 1
+    date: 2026-06-15
+    week: 1
+    # Morning: Orientation (2 h, administrative overhead — not in 32 h practice count).
+    # Covers P1 item 1 (Jupyter/Python/library setup) so Day 2 P1 can skip setup.
+    orientation:
+      desc: "Kursga kirish, muhit sozlash, hisob yaratish, kapstone tanishtirish"
+      p1_item_absorbed: "1. Jupyter Notebook va Python kutubxonalarini (NLTK, spaCy) sozlash."
+      tasks:
+        - "Kaggle hisobi + GPU quota tekshiruvi"
+        - "Hugging Face token olish va ~/.kaggle/kaggle.json sozlash"
+        - "GitHub repo sozlash va SSH kalit"
+        - "Kapstone loyiha skeleti: capstone/modules/ papkasi va contracts.py"
+        - "Muhit tekshiruvi: paketlar, versiyalar, OFFLINE_FALLBACK=True"
+    # Afternoon: L1 (2 h, in 32 h lecture count)
+    lecture_topic: >
+      NLP asoslari va matnni qayta ishlash texnologiyalari.
+    lecture_official_no: 1
+    lecture_subitems:
+      - "1. NLPga kirish, tarixi va hissiyotlar (sentiment) tahlili."
+      - "2. Matnga dastlabki ishlov berish usullari: tokenizatsiya, normalizatsiya, \"Stop Words\", stemming va lemmatizatsiya."
+      - "3. Matn xususiyatlarini aniqlash nazariyasi: BoW va TF-IDF usullari."
+      - "4. NLPning asosiy vazifalari va ilovalari."
+    seminal_paper: >
+      Salton, G., Wong, A., Yang, C.S. (1975). A Vector Space Model for
+      Automatic Indexing. Communications of the ACM 18(11).
+    uzbek_angle: >
+      Agglutinatsiya va TF-IDF: 'o'rganaman', 'o'rganish', 'o'rgandim' — uchta
+      alohida token, bir xil o'zak. TF-IDF da sun'iy past ko'rsatkich.
+      Stemming zaruriyati o'zbek uchun ayniqsa yuqori.
+    # hand_example: L1[I] → P1 (Day 2) first assert
+    hand_example:
+      description: >
+        Kichik korpus (3 hujjat, 4 so'z): D1='nlp qiziq', D2='python foydali',
+        D3='nlp foydali'. IDF(nlp)=ln(3/2)≈0.405; IDF(qiziq)=ln(3/1)≈1.099.
+        TF-IDF(nlp, D1) = 1 × 0.405 = 0.405.
+        TF-IDF(qiziq, D1) = 1 × 1.099 = 1.099.
+      expected_value: "TF-IDF('nlp', D1)=0.405; TF-IDF('qiziq', D1)=1.099"
+    gpu_required: false
+    corpus_subset: null   # orientation only
+
+  - type: teaching_day
+    day: 2
+    date: 2026-06-16
+    week: 1
+    practice_official_no: 1
+    practice_topic: >
+      Matnga ishlov berish konveyerini - payplaynini yaratish.
+    practice_subitems:
+      - "1. Jupyter Notebook va Python kutubxonalarini (NLTK, spaCy) sozlash."
+      - "2. Matnni tokenlarga, gaplarga ajratish va tinish belgilarini olib tashlash."
+      - "3. \"Stop-word\"larni filtrlash va stemming va lemmatizatsiya amaliyoti."
+      - "4. BoW va TF-IDF vektorlarini \"scikit-learn\" kutubxonasi yordamida yaratish."
+    periphery:
+      - "Matn faylini yuklash va encoding (to'liq beriladi — PRIMM)"
+      - "spaCy uz/xx pipeline yuklash va sent_tokenize (to'liq beriladi)"
+    core:
+      - "Regex tokenizer o'zbek uchun (apostrof U+2019 va ASCII ' ni hisobga olgan holda)"
+      - "Stopword filtri va SnowballStemmer / qo'shimcha qirqish"
+      - "CountVectorizer → BoW matritsasi va TF-IDF vaznlash"
+    capstone_module:
+      name: "TextPreprocessor"
+      file: "capstone/modules/m01_text_preprocessor.py"
+      interface: "preprocess(text: str) -> list[str]  # tokenize+normalize+stem"
+      consumed_by: [3, 5, 6, 7, 8, 9, 11, 15]
+    corpus_subset: uz_news_mini
+    lecture_official_no: 2
+    lecture_topic: >
+      Klassik usullar bilan matnlarni tasniflash, klassifikator modellarni
+      baholash va NLPdagi etika.
+    lecture_subitems:
+      - "1. Logistik regressiyani sentiment tahlilida qo'llash."
+      - "2. \"Naive Bayes\" nazariyasi va uning kengaytirilgan usullari (\"smoothing\")."
+      - "3. NLPda modellarni baholash metrikalari: tasniflash aniqligi (\"accuracy\"), tasdiqlash aniqligi (\"precision\"), to'g'ri topish aniqligi (\"recall\"), F1-baho."
+      - "4. NLPda adolat, hisobdorlik va shaffoflik."
+    seminal_paper: >
+      McCallum, A., Nigam, K. (1998). A Comparison of Event Models for Naive
+      Bayes Text Classification. AAAI/ICML-98 Workshop on Learning for Text
+      Categorization.
+    uzbek_angle: >
+      Naive Bayes va morfologiya: 'yaxshi', 'yaxshiroq', 'yaxshilik' —
+      uch alohida feature. Bag-of-words o'zbek lug'atini sun'iy kattalashtiradi;
+      F1 ga ta'siri.
+    hand_example:
+      # L2[I] → P2 (Day 3) first assert
+      description: >
+        Laplace smoothing NB: pos=['yaxshi film','ajoyib film'], neg=['yomon film'].
+        |V|=4 {yaxshi,ajoyib,yomon,film}. P(pos)=2/3, P(neg)=1/3.
+        P(film|pos)=(2+1)/(4+4)=3/8; P(yaxshi|pos)=(1+1)/8=1/4.
+        P(film|neg)=(1+1)/(2+4)=1/3; P(yaxshi|neg)=(0+1)/6=1/6.
+        Test 'yaxshi film': score_pos∝(2/3)(1/4)(3/8)=1/16≈0.0625;
+        score_neg∝(1/3)(1/6)(1/3)=1/54≈0.0185.
+      expected_value: "score_pos/score_neg ≈ 3.38 → ijobiy (positive)"
+    gpu_required: false
+
+  - type: milestone
+    id: w1
+    date: 2026-06-17
+    week: 1
+    title: "1-hafta milestone: TextPreprocessor integratsiyasi"
+    # M1 issued Wed 17-iyun; modules from only Day 2 (P1) are available.
+    # Days 3-4 (P2, P3) happen Thu-Fri. Brief is two-phase:
+    #   Phase A (Wed, async): Apply m01 to chosen corpus; measure vocab/stats.
+    #   Phase B (Fri–weekend, self-directed): integrate m02 after Day 3.
+    # Deadline: Mon 22-iyun start of week 2. (Approved design.)
+    modules_covered: [1]            # m01 is built by Wed; m02 will be built Fri
+    modules_preview:  [2]           # m02 built Day 3 Fri; include in brief as Phase B
+    capstone_integration: >
+      Phase A: tinglovchi o'z tanlagan hujjatlar to'plamida (50–100 hujjat) m01 ni
+      ishlatadi; lug'at hajmi, token / stopword nisbati, eng ko'p uchraydigan 20 so'z
+      chiqariladi. Phase B: m02 tayyorgach, m01→m02 pipeline ni sinovdan o'tkazish.
+    brief_file:   "milestones/w1_milestone.md"
+    check_script: "milestones/w1_check.py"
+    deadline:     2026-06-22
+
+  - type: teaching_day
+    day: 3
+    date: 2026-06-18
+    week: 1
+    practice_official_no: 2
+    practice_topic: >
+      Klassik MO' modellaridan foydalanib hissiyotlar tahlilini amalga oshirish.
+    practice_subitems:
+      - "1. Ma'lumotlar to'plamini tayyorlash, \"o'quv\" va \"sinov\" qismlariga ajratish."
+      - "2. \"Scikit-learn\" yordamida logistik regressiya modelini o'qitish."
+      - "3. \"Scikit-learn\" yordamida \"Naïve Bayes\" modelini o'qitish."
+      - "4. Modellarni baholash: Xatoliklar matritsasini chizish, tasniflash, tasdiqlash va to'g'ri topish aniqliklari, F1-baho ko'rsatkichlarini hisoblash."
+    periphery:
+      - "train_test_split, pipeline (TfidfVectorizer+classifier) (to'liq beriladi)"
+      - "ConfusionMatrixDisplay, classification_report (to'liq beriladi)"
+    core:
+      - "LogisticRegression ni o'qitish va hyperparameter (C) ta'sirini ko'rish"
+      - "MultinomialNB ni o'qitish va precision/recall/F1 taqqoslash"
+      - "Xato tahlili: qaysi hujjatlar noto'g'ri tasniflandi va nima uchun"
+    capstone_module:
+      name: "SentimentClassifier"
+      file: "capstone/modules/m02_sentiment_classifier.py"
+      interface: "fit(texts, labels) / predict(text: str) -> str / predict_proba(text) -> dict[str,float]"
+      consumed_by: [14, 16]
+    corpus_subset: uz_news_mini   # binarize: 2 mavzu sinfini sentiment proxy sifatida ishlatish
+    lecture_official_no: 3
+    lecture_topic: >
+      Vektor fazo modellari, semantik munosabatlar va ularni vizualizatsiya qilish.
+    lecture_subitems:
+      - "1. So'z embeddinglari tushunchasi: taqsimotga asoslangan gipoteza va zich vektorlar."
+      - "2. Vektorlararo o'xshashlikni o'lchash: kosinus o'xshashlik nazariyasi."
+      - "3. So'z analogiyalari va semantik munosabatlar tushunchasi."
+      - "4. PCA usuli yordamida yuqori o'lchamli embeddinglarni vizualizatsiya qilish nazariyasi."
+    seminal_paper: >
+      Pennington, J., Socher, R., Manning, C.D. (2014). GloVe: Global Vectors
+      for Word Representation. EMNLP 2014.
+    uzbek_angle: >
+      Pretrained embeddinglar va o'zbek: GloVe/Word2Vec asosan ingliz tilida
+      o'qitilgan — o'zbek so'zlari uchun coverage juda past. Kelgusi darsda
+      o'zbek korpusida noldan o'qitish.
+    hand_example:
+      # L3[I] → P3 (Day 4) first assert
+      description: >
+        BoW vektorlari: a=(1,1,1,0), b=(1,1,0,1) (lug'at: nlp,juda,qiziq,foydali).
+        dot(a,b)=2; |a|=|b|=sqrt(3).
+        cosine(a,b) = 2/(sqrt(3)×sqrt(3)) = 2/3.
+      expected_value: "cosine(a,b) = 2/3 ≈ 0.667"
+    gpu_required: false
+
+  - type: teaching_day
+    day: 4
+    date: 2026-06-19
+    week: 1
+    practice_official_no: 3
+    practice_topic: >
+      So'z embeddinglari bilan ishlash amaliyoti.
+    practice_subitems:
+      - "1. Oldindan o'qitilgan \"GloVe\" yoki \"Word2Vec\" embeddinglarini yuklash."
+      - "2. So'zlar o'rtasidagi kosinus o'xshashligini hisoblash orqali eng o'xshash so'zlarni topish."
+      - "3. Vektor arifmetikasi yordamida so'z analogiyalarini yechish."
+      - "4. \"Matplotlib\", \"Seaborn\" kutubxonalari va PCA algoritmi yordamida embeddinglarni ikki o'lchamli fazoda vizualizatsiya qilish."
+    periphery:
+      - "cc_uz_100k.kv ni gensim KeyedVectors.load() bilan yuklash (to'liq beriladi)"
+      - "PCA(n_components=2) + scatter plot (to'liq beriladi)"
+    core:
+      - "cosine_similarity: sklearn va qo'lda hisob taqqoslash"
+      - "wv.most_similar('toshkent', topn=5) va analogiya: 'toshkent'-'uzbekiston'+'rossiya'≈?"
+      - "PCA ikki o'lchamli embedding fazosida semantik klasterlarni vizualizatsiya"
+    capstone_module:
+      name: "PretrainedEmbedder"
+      file: "capstone/modules/m03_pretrained_embedder.py"
+      interface: "load(path) / embed(word: str) -> np.ndarray / most_similar(word, n) -> list / oov_rate(texts) -> float"
+      consumed_by: [5, 8]
+    corpus_subset: cc_uz_100k_kv
+    lecture_official_no: 4
+    lecture_topic: >
+      Masofaga asoslangan qidiruv va imlo tuzatish usullari.
+    lecture_subitems:
+      - "1. Samarali o'xshashlik qidiruvi nazariyasi va qidiruvni tezlashtirish usullari: KNN, LSH."
+      - "2. Imlo xatolarini tuzatish uchun \"Noisy channel\" modeli."
+      - "3. Minimal tahrir (Levenshteyn) masofasi va dinamik dasturlash."
+      - "4. Avtomatik tuzatish tizimlarining arxitekturasi va komponentlari."
+    seminal_paper: >
+      Norvig, P. (2009). How to Write a Spelling Corrector.
+      (norvig.com/spell-correct.html) — Noisy channel, edit distance, unigram LM.
+    uzbek_angle: >
+      Imlo tuzatish va o'zbek: apostrof (o', g') tufayli "o'qituvchi" va
+      "oqutuvchi" Levenshtein masofasi 2 emas — apostrof belgisi hisobga olinishi
+      kerak. ASCII vs U+2019 tokenizatsiya muammosi.
+    hand_example:
+      # L4[I] → P4 (Day 5) first assert
+      description: >
+        Levenshtein masofasi: edit_distance("qo'l", "ko'l") = 1 (1 ta almashtirish: q→k).
+        edit_distance("dastur", "dastir") = 1 (u→i).
+        Dinamik dasturlash jadvali 2×2 misolda ko'rsatiladi.
+      expected_value: "edit_distance('qo'l','ko'l')=1; edit_distance('dastur','dastir')=1"
+    gpu_required: false
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # WEEK 2
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  - type: teaching_day
+    day: 5
+    date: 2026-06-22
+    week: 2
+    practice_official_no: 4
+    practice_topic: >
+      Imlo xatolarini tekshirish va qidiruv tizimini yaratish.
+    practice_subitems:
+      - "1. Levenshteyn masofasi algoritmini implementatsiya qilish va nomzod so'zlarni topish."
+      - "2. Ehtimollikka asoslangan \"Noisy Channel\" imlo tuzatish modulini yaratish."
+      - "3. Hujjatlar to'plami uchun LSH indeksini qurish."
+      - "4. LSH va oddiy qidiruv tezligini katta hajmdagi ma'lumotlarda taqqoslash."
+    periphery:
+      - "datasketch MinHashLSH API (to'liq beriladi — PRIMM)"
+      - "unigram chastota lug'ati va P(word) hisoblash (to'liq beriladi)"
+    core:
+      - "edit_distance(s1, s2) DP implementatsiyasi (2D jadval)"
+      - "Noisy channel: argmax P(w)×P(x|w) — top-k nomzod so'zlar"
+      - "LSH indeks qurish va k-NN vs LSH qidiruv tezligini taqqoslash"
+    capstone_module:
+      name: "SpellLSHRetriever"
+      file: "capstone/modules/m04_spell_lsh_retriever.py"
+      interface: "correct(word: str) -> str / index_docs(texts: list[str]) / retrieve_lsh(query: str, k: int) -> list[str]"
+      consumed_by: [15, 16]
+    corpus_subset: uz_news_full    # 1 000+ hujjat LSH benchmark uchun
+    lecture_official_no: 5
+    lecture_topic: >
+      Ehtimollik modellari: N-grammalar va so'z turkumlarini teglash.
+    lecture_subitems:
+      - "1. Tillarni modellashtirish vazifasi, N-grammalar (unigramma, bigramma, trigramma) tushunchasi va matnni avtomatik to'ldirish nazariyasi."
+      - "2. Modelni baholash uchun \"Perplexity\" metrikasi va modelni takomillashtirish uchun \"Smoothing\" usullari."
+      - "3. So'z turkumlarini aniqlash va Markov zanjirlari."
+      - "4. Yashirin Markov modellari va Viterbi algoritmi."
+    seminal_paper: >
+      Rabiner, L.R. (1989). A Tutorial on Hidden Markov Models and Selected
+      Applications in Speech Recognition. Proceedings of the IEEE 77(2).
+    uzbek_angle: >
+      N-gramlar va SOV tartib: o'zbek gaplarida kesim (predicate) oxirida keladi —
+      bigramma modeli "men ___" dan keyingi so'zni "sevaman" deb bashorat qiladi,
+      lekin "men seviladigan narsalarni sevaman"dagi uzoq bog'liqlikni ko'rmaydi.
+    hand_example:
+      # L5[I] → P5 (Day 6) first assert
+      description: >
+        Viterbi (2 holat: NN/VB, 2 kuzatuv: nlp/yozdi):
+        π(NN)=0.7, π(VB)=0.3.
+        B(nlp|NN)=0.9, B(nlp|VB)=0.1, B(yozdi|NN)=0.1, B(yozdi|VB)=0.9.
+        A(VB|NN)=0.6, A(NN|VB)=0.3.
+        t=1: δ(NN)=0.7×0.9=0.63; δ(VB)=0.3×0.1=0.03.
+        t=2: δ(VB)=max(0.63×0.6, 0.03×0.7)×0.9=0.378×0.9=0.3402.
+        Traceback: NN→VB.
+      expected_value: "Ketma-ketlik: [NN, VB]; δ(VB,t=2)=0.3402"
+    gpu_required: false
+
+  - type: teaching_day
+    day: 6
+    date: 2026-06-23
+    week: 2
+    practice_official_no: 5
+    practice_topic: >
+      "Autocomplete" tizimi va so'z turkumini teglash dasturini yaratish.
+    practice_subitems:
+      - "1. Matn korpusidan N-gramma (bigramma/trigramma) ehtimolliklarini hisoblash."
+      - "2. Keyingi so'zni bashorat qiluvchi \"autocomplete\" prototipini yaratish."
+      - "3. Yashirin Markov modellari parametrlarini hisoblash."
+      - "4. Viterbi algoritmi yordamida so'z turkumlarini teglash dasturini yozish."
+    periphery:
+      - "NLTK ngrams() va defaultdict bilan chastota jadval (to'liq beriladi)"
+      - "HMM emission/transition matritsalarini CSV dan yuklash (to'liq beriladi)"
+    core:
+      - "Bigram MLE modeli + Laplace smoothing: P(w_i|w_{i-1})"
+      - "Autocomplete: top-3 keyingi so'z bashorati"
+      - "Viterbi DP implementatsiyasi: δ, ψ matritsalar"
+    capstone_module:
+      name: "Autocomplete"
+      file: "capstone/modules/m05_autocomplete.py"
+      interface: "train(texts, n) / complete(prefix: str, k: int) -> list[str] / perplexity(text: str) -> float"
+      consumed_by: [16]
+    capstone_module_b:              # HMM/Viterbi — pedagogical only
+      name: "POSTagger"
+      file: "capstone/modules/m05b_pos_tagger.py"
+      interface: "train(tagged_sents) / tag(tokens: list[str]) -> list[tuple[str,str]]"
+      consumed_by: []               # pedagogical — not wired into final pipeline
+    corpus_subset: uz_news_full
+    lecture_official_no: 6
+    lecture_topic: >
+      Neyron tarmoqlarga asoslangan so'z embeddinglari: "Word2Vec" (CBOW).
+    lecture_subitems:
+      - "1. Neyron embeddinglarga ehtiyoj va ularning xususiyatlari."
+      - "2. CBOW modeli arxitekturasi."
+      - "3. Neyron tarmoqni o'qitish asoslari: yo'qotish funksiyasi, to'g'ri/teskari tarqalish."
+      - "4. CBOW modelini o'qitish jarayoni va embedding sifatini baholash usullari."
+    seminal_paper: >
+      Mikolov, T., Chen, K., Corrado, G., Dean, J. (2013).
+      Efficient Estimation of Word Representations in Vector Space. ICLR 2013.
+    uzbek_angle: >
+      CBOW va o'zbek lug'ati: agglutinatsiya tufayli vocabulary explosion muammosi
+      — 'o'rganaman', 'o'rganadi', 'o'rgandim' alohida tokenlar. CBOW ularning
+      umumiy kontekstini o'rganib ularga yaqin vektorlar bera oladimi?
+    hand_example:
+      # L6[I] → P6 (Day 7) first assert
+      description: >
+        CBOW bir qadam: kontekst=[men, sevaman], center=nlp, dim=2.
+        emb(men)=[0.5,0.3], emb(sevaman)=[0.1,0.7].
+        CBOW kirish = avg([0.5,0.3],[0.1,0.7]) = [0.3, 0.5].
+      expected_value: "CBOW_input = [0.3, 0.5]"
+    gpu_required: false
+
+  - type: milestone
+    id: w2
+    date: 2026-06-24
+    week: 2
+    title: "2-hafta milestone: Klassik pipeline integratsiyasi"
+    modules_covered: [1, 2, 3, 4, 5]   # m01–m05 built through Day 6
+    capstone_integration: >
+      m01 (TextPreprocessor) → m04 (SpellLSHRetriever) pipeline: so'rovni
+      imloni tuzatish → LSH qidiruv → top-k hujjat.
+      m02 (SentimentClassifier) ni m01 bilan birlashtirish: preprocessing → TF-IDF → predict.
+      m05 (Autocomplete) ni so'rov yozish vaqtida qo'llab-quvvatlash uchun sinovdan o'tkazish.
+    brief_file:   "milestones/w2_milestone.md"
+    check_script: "milestones/w2_check.py"
+    deadline:     2026-06-29
+
+  - type: teaching_day
+    day: 7
+    date: 2026-06-25
+    week: 2
+    practice_official_no: 6
+    practice_topic: >
+      Maxsus korpus uchun "Word2Vec" modelini noldan o'qitish.
+    practice_subitems:
+      - "1. O'zbek tilida maxsus korpus yig'ish va tozalash."
+      - "2. \"Gensim\" kutubxonasi yordamida CBOW arxitekturasini sozlash."
+      - "3. Modelni o'qitish va hosil bo'lgan embeddinglar sifatini tekshirish."
+      - "4. Modelni saqlash va vizualizatsiya vositasida (\"TensorBoard\") ko'rish."
+    periphery:
+      - "uz_news_full korpusini m01 bilan tozalash va LineSentence ga aylantirish (to'liq)"
+      - "TensorBoard projector metadata fayli va sprite rasm (to'liq beriladi)"
+    core:
+      - "Word2Vec(vector_size=100, window=5, min_count=3, sg=0) — CBOW o'qitish"
+      - "wv.most_similar() va so'z analogiyalarini sinovdan o'tkazish"
+      - "Modelni saqlash (.kv) va keyingi sessiyalarda yuklash"
+    capstone_module:
+      name: "CustomWord2Vec"
+      file: "capstone/modules/m06_custom_word2vec.py"
+      interface: "train(texts, **kwargs) / embed(word: str) -> np.ndarray / save(path) / load(path)"
+      consumed_by: [8, 9]
+    corpus_subset: uz_news_full
+    lecture_official_no: 7
+    lecture_topic: >
+      Rekurrent neyron tarmoqlar.
+    lecture_subitems:
+      - "1. N-gramma modellaridan neyron til modellariga o'tish."
+      - "2. RNN konsepsiyasi: Ketma-ket xotira uchun yashirin holat."
+      - "3. RNN arxitekturasi va uning vaqt bo'ylab yoyilishi."
+      - "4. RNNlarni tillarni modellashtirish va matnni tasniflashda qo'llash."
+    seminal_paper: >
+      Rumelhart, D.E., Hinton, G.E., Williams, R.J. (1986).
+      Learning Representations by Back-Propagating Errors. Nature 323.
+    uzbek_angle: >
+      RNN va o'zbek: uzun qo'shimcha zanjirlar ("o'rganilganlardan") va SOV gap
+      tartibi. Kesim gapning oxirida — RNN predicate ni uzoq kontekstdan ushlab
+      tura oladimi? Vanishing gradient muammosi.
+    hand_example:
+      # L7[I] → P7 (Day 8) first assert
+      description: >
+        RNN bir qadami: h_t = tanh(W_h×h_{t-1} + W_x×x_t).
+        h_0=[0,0], W_h=I₂, W_x=I₂, x_1=[1,0].
+        h_1 = tanh([1,0]+[0,0]) = tanh([1,0]) = [tanh(1), tanh(0)].
+      expected_value: "h_1 ≈ [0.762, 0.000]"
+    gpu_required: false
+
+  - type: teaching_day
+    day: 8
+    date: 2026-06-26
+    week: 2
+    # Week 2 — CPU-only per kaggle-hardware skill.
+    # SimpleRNN on 5 000-sample corpus, hidden=64, 5 epochs ≈ 2–3 min CPU.
+    practice_official_no: 7
+    practice_topic: >
+      Matnlarni tasniflash uchun RNN tarmog'ini qurish.
+    practice_subitems:
+      - "1. Matnlarni ketma-ketliklarga o'girish va \"padding\" qilish."
+      - "2. \"Keras\"/\"PyTorch\" yordamida \"SimpleRNN\" qatlamli model qurish."
+      - "3. Modelni o'qitish va natijalarini grafikda tahlil qilish."
+      - "4. Model bashoratlarini sinov ma'lumotlarida tekshirish."
+    periphery:
+      - "m01+m06 dan tokenized sequences va padding (to'liq beriladi)"
+      - "PyTorch DataLoader, collate_fn (to'liq beriladi)"
+    core:
+      - "nn.Embedding + nn.RNN: model arxitekturasi va forward pass"
+      - "CrossEntropyLoss + Adam, 5 epoch o'qitish; loss/acc grafigi"
+      - "Sinov ma'lumotlarida baholash: F1 report"
+    capstone_module:
+      name: "RNNClassifier"
+      file: "capstone/modules/m07_rnn_classifier.py"
+      interface: "fit(texts, labels, epochs) / predict(text: str) -> str / predict_proba(text) -> dict"
+      consumed_by: [9, 16]
+    corpus_subset: uz_news_mini   # 5 000 sample, CPU limit
+    lecture_official_no: 8
+    lecture_topic: >
+      Ilg'or RNN arxitekturalari: GRU va LSTM.
+    lecture_subitems:
+      - "1. RNNlarda axborot oqimini yaxshilovchi GRU."
+      - "2. Yo'qolib boruvchi gradiyent muammosi va unga yechim sifatida LSTM."
+      - "3. LSTMning asosiy komponentlari: xotira kataklari holati va darvozalar."
+      - "4. GRU va LSTM arxitekturalarini taqqoslash."
+    seminal_paper: >
+      Hochreiter, S., Schmidhuber, J. (1997).
+      Long Short-Term Memory. Neural Computation 9(8):1735–1780.
+    uzbek_angle: >
+      LSTM va o'zbek: uzoq qo'shimcha zanjirlar uchun xotira katakchasi (cell state)
+      qanchalik yordam beradi? "O'rganilganlardan" ≈ 4 morfema — LSTM ularni
+      bir birlik sifatida ifodalay oladimi?
+    hand_example:
+      # L8[I] → P8 (Day 9) first assert
+      description: >
+        LSTM unutish darvozasi (1D): W_f=1, b_f=0, h_{t-1}=0.5, x_t=1.0.
+        f_t = σ(1×0.5 + 1×1.0 + 0) = σ(1.5) = 1/(1+e^{-1.5}).
+        e^{-1.5} ≈ 0.223; f_t = 1/1.223 ≈ 0.818.
+      expected_value: "forget gate f_t ≈ 0.818 (past state ko'p saqlanadi)"
+    gpu_required: false
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # WEEK 3
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  - type: teaching_day
+    day: 9
+    date: 2026-06-29
+    week: 3
+    practice_official_no: 8
+    practice_topic: >
+      "GRU" va "LSTM" modellarini taqqoslash.
+    practice_subitems:
+      - "1. \"LSTM\" arxitekturasiga ega tasniflash modelini qurish."
+      - "2. \"GRU\" arxitekturasiga ega tasniflash modelini qurish."
+      - "3. Ikkala modelni bir xil vazifada o'qitish va samaradorligini taqqoslash."
+      - "4. Uzun matnlarda \"Yo'qolib boruvchi gradiyent\" ta'sirini amaliy tahlil qilish."
+    periphery:
+      - "m06 (CustomWord2Vec) embeddinglardan pretrained Embedding qatlam (to'liq)"
+      - "training loop, early stopping, learning curve (to'liq beriladi)"
+    core:
+      - "nn.LSTM (bidirectional=False, num_layers=2) model qurish"
+      - "nn.GRU bir xil konfiguratsiyada qurish"
+      - "Vanishing gradient demo: gradient norm uzun vs qisqa sequence"
+    capstone_module:
+      name: "GRULSTMClassifier"
+      file: "capstone/modules/m08_gru_lstm_classifier.py"
+      interface: "fit(texts, labels, arch='lstm', epochs=10) / predict(text) -> str / compare_report() -> dict"
+      consumed_by: [14, 16]
+    corpus_subset: uz_news_full
+    lecture_official_no: 9
+    lecture_topic: >
+      RNN yoki LSTM yordamida matn yaratish va ikki tomonlama modellar.
+    lecture_subitems:
+      - "1. RNN/LSTM yordamida matn yaratish g'oyasi va arxitekturasi."
+      - "2. \"Temperature Sampling\" yordamida ijodkorlikni boshqarish."
+      - "3. RNN cheklovlari: Yo'qolib boruvchi / Portlovchi gradiyent muammolari."
+      - "4. Ikki tomonlama RNNlar yordamida kontekstni kengaytirish."
+    seminal_paper: >
+      Cho, K., van Merriënboer, B., et al. (2014). Learning Phrase Representations
+      using RNN Encoder-Decoder for Statistical Machine Translation. EMNLP 2014.
+    uzbek_angle: >
+      Matn generatsiya o'zbek uchun: badiiy asar korpusida (Cho'lpon, Hamza)
+      LSTM ning temperature=1.0 vs 0.5 da farqi — past temperature o'zbek
+      iboralari naqshini ko'proq takrorlaydi.
+    hand_example:
+      # L9[I] → P9 (Day 10) first assert
+      description: >
+        Temperature sampling: logitlar=[3.0,1.0,2.0], vocab=[nlp,foydali,qiziq].
+        T=1.0: softmax → [e³,e¹,e²]/(e³+e¹+e²)=[20.09,2.72,7.39]/30.2≈[0.665,0.090,0.245].
+        T=0.5: scaled logits=[6,2,4] → [e⁶,e²,e⁴]/(…)≈[0.867,0.016,0.117].
+      expected_value: "T=1: p(nlp)≈0.665; T=0.5: p(nlp)≈0.867 (past temp → deterministic)"
+    gpu_required: true
+
+  - type: teaching_day
+    day: 10
+    date: 2026-06-30
+    week: 3
+    practice_official_no: 9
+    practice_topic: >
+      LSTM va Bi-LSTM modellarni matn generatsiya qilishda sinab ko'rish.
+    practice_subitems:
+      - "1. LSTM yordamida badiiy asar uslubida matn generatsiya qiluvchi modelni o'qitish."
+      - "2. Generatsiya jarayonida \"temperatura\" parametrini o'zgartirib, natijani kuzatish."
+      - "3. Bi-LSTM (ikki tomonlama LSTM) qatlamini qo'shib, kontekstni o'rganish samaradorligini oshirish."
+      - "4. Oddiy va ikki tomonlama modellar natijalarini solishtirish."
+    periphery:
+      - "Cho'lpon / Navoiy she'rlar korpusini yuklash va char-level tokenizatsiya (to'liq)"
+      - "next-char prediction training loop (to'liq beriladi)"
+    core:
+      - "char-level LSTM generativ model (hidden=128, 2 layer)"
+      - "temperature=0.3/0.7/1.2 da generatsiyalar taqqoslash"
+      - "Bi-LSTM qo'shish va perplexity o'lchash"
+    capstone_module:
+      name: "TextGenerator"
+      file: "capstone/modules/m09_text_generator.py"
+      interface: "train(text, epochs) / generate(seed: str, length: int, temperature: float) -> str"
+      consumed_by: []    # pedagogical — creative generation demo, not in production pipeline
+    corpus_subset: uz_news_full   # yoki badiiy asar parcha (kichik)
+    lecture_official_no: 10
+    lecture_topic: >
+      Nomlangan obyektlarni tanib olish (NER) tizimini yaratish.
+    lecture_subitems:
+      - "1. NER vazifasi, umumiy obyektlar turlari va teglash sxemalari (IOB, BIOES)."
+      - "2. LSTM asosidagi NER tizimlarining arxitekturasi."
+      - "3. Kontekstni yaxshilash uchun ikki tomonlama LSTMdan foydalanish."
+      - "4. NER modelining samaradorligini baholash."
+    seminal_paper: >
+      Lample, G., Ballesteros, M., Subramanian, S., Kawakami, K., Dyer, C. (2016).
+      Neural Architectures for Named Entity Recognition. NAACL-HLT 2016.
+    uzbek_angle: >
+      NER va o'zbek: yer nomlari "-da", "-dan" qo'shimchalari bilan keladi
+      ("Toshkentda", "Samarqanddan") — tokenizer bu qo'shimchalarni noto'g'ri
+      ajratsa, entity chegaralari xato bo'ladi. IOB2 taglash.
+    hand_example:
+      # L10[I] → P10 (Day 11) first assert
+      description: >
+        IOB2 teglash: "Malika Toshkentda ishlaydi."
+        Tokenlar: [Malika, Toshkentda, ishlaydi, .].
+        To'g'ri teglar: [B-PER, B-LOC, O, O].
+        "Toshkentda" = B-LOC (sufiks "-da" entity chegarasini o'zgartirmaydi).
+      expected_value: "Malika→B-PER, Toshkentda→B-LOC, ishlaydi→O"
+    gpu_required: true
+
+  - type: milestone
+    id: w3
+    date: 2026-07-01
+    week: 3
+    title: "3-hafta milestone: Neyron arxitekturalar integratsiyasi"
+    modules_covered: [1, 2, 3, 4, 5, 6, 7, 8]   # m01–m08 built through Day 9
+    capstone_integration: >
+      Klassifikator taqqoslov hisoboti: m02 (LogReg/NB) vs m07 (RNN) vs m08 (GRU/LSTM)
+      — bir xil test to'plamida F1 va inference tezligini taqqoslash.
+      m06 (CustomWord2Vec) embeddinglarni m07/m08 da pretrained vs random init taqqoslash.
+    brief_file:   "milestones/w3_milestone.md"
+    check_script: "milestones/w3_check.py"
+    deadline:     2026-07-06
+
+  - type: teaching_day
+    day: 11
+    date: 2026-07-02
+    week: 3
+    practice_official_no: 10
+    practice_topic: >
+      Nomlangan obyektlarni tanib olish tizimini yaratish.
+    practice_subitems:
+      - "1. NER ma'lumotlar to'plamini tayyorlash va kodlash."
+      - "2. Embedding va Bi-LSTM qatlamlari yordamida model arxitekturasini qurish."
+      - "3. \"TimeDistributed\" qatlami orqali har bir token uchun sinfni bashorat qilish."
+      - "4. Matndagi shaxslar, joylar va tashkilotlarni ajratib oluvchi tizimni ishga tushirish."
+    periphery:
+      - "WikiANN uz ni yuklash va IOB2 → index encoding (to'liq beriladi)"
+      - "padding, masking va seqlabel train loop (to'liq beriladi)"
+    core:
+      - "Bi-LSTM-CRF (yoki Bi-LSTM+Softmax) NER model"
+      - "token-level F1 hisoblash (seqeval)"
+      - "Demo: o'zbek matni uchun NER output ko'rsatish"
+    capstone_module:
+      name: "NERTagger"
+      file: "capstone/modules/m10_ner_tagger.py"
+      interface: "fit(tagged_sentences) / predict(text: str) -> list[tuple[str,str]] / entities(text) -> list[dict]"
+      consumed_by: [15, 16]
+    corpus_subset: uz_ner_wikiann   # RESOLVED C1 — train+dev combined (~200); low F1 stated explicitly
+    lecture_official_no: 11
+    lecture_topic: >
+      Neyron mashina tarjimasi: "Seq2Seq" va "Attention" mexanizmi.
+    lecture_subitems:
+      - "1. Enkoder-Dekoder arxitekturasi va uning \"information bottleneck\" muammosi."
+      - "2. \"Attention\" mexanizmi: Dekoderga \"ortga qarash\" imkonini berish."
+      - "3. \"Attention\" hisoblash jarayoni: so'rovlar, kalitlar, qiymatlar."
+      - "4. Mashina tarjimasini BLEU metrikasi bilan baholash."
+    seminal_paper: >
+      Bahdanau, D., Cho, K., Bengio, Y. (2015). Neural Machine Translation
+      by Jointly Learning to Align and Translate. ICLR 2015.
+    uzbek_angle: >
+      Seq2Seq va o'zbek-ingliz tarjima: SOV→SVO konversiyasi — dekoder
+      "egalik" ni inglizda sub-ject sifatida oldinroq chiqarishi kerak.
+      Attention qaysi encoder pozitsiyasiga "qaraydi"?
+    hand_example:
+      # L11[I] → P11 (Day 12) first assert
+      description: >
+        Additive attention: 3 encoder holat, energy=[2.0, 1.0, 3.0].
+        exp(2)≈7.389, exp(1)≈2.718, exp(3)≈20.086; sum≈30.193.
+        α=[7.389/30.193, 2.718/30.193, 20.086/30.193]≈[0.245, 0.090, 0.665].
+      expected_value: "α≈[0.245, 0.090, 0.665]; 3-pozitsiyaga ko'proq e'tibor"
+    gpu_required: true
+
+  - type: teaching_day
+    day: 12
+    date: 2026-07-03
+    week: 3
+    practice_official_no: 11
+    practice_topic: >
+      "Attention" mexanizmli neyro-tarjimon.
+    practice_subitems:
+      - "1. O'zbekcha-inglizcha parallel korpus tayyorlash."
+      - "2. Enkoder (LSTM) va Dekoder (LSTM) qismlaridan iborat \"Seq2Seq\" modelini qurish."
+      - "3. \"Keras\" va \"PyTorch\" kutubxonalaridan foydalanib, \"Attention\" qatlami yordamida \"Attention\" mexanizmini modelga qo'shish."
+      - "4. Modelni o'qitish va sodda gaplarni tarjima qilib, BLEU metrikasi bilan baholash."
+    periphery:
+      - "OPUS-100 uz-en subset (20k juft) yuklash va tokenizatsiya (to'liq beriladi)"
+      - "BLEU hisoblash: nltk.translate.bleu_score (to'liq beriladi)"
+    core:
+      - "Encoder LSTM + Bahdanau Attention + Decoder LSTM qurish"
+      - "Teacher forcing bilan o'qitish (10 epoch, GPU)"
+      - "Oddiy gaplarni tarjima + attention heatmap vizualizatsiyasi"
+    capstone_module:
+      name: "Seq2SeqTranslator"
+      file: "capstone/modules/m11_seq2seq_translator.py"
+      interface: "train(src_texts, tgt_texts, epochs) / translate(text: str) -> str / bleu(refs, hyps) -> float"
+      consumed_by: []    # pedagogical — Seq2Seq NMT is a standalone demo
+    corpus_subset: uz_en_opus100   # RESOLVED C2 — 20k pairs subsample; demo-quality BLEU; license noted
+    lecture_official_no: 12
+    lecture_topic: >
+      Transformer arxitekturasi va matnni umumlashtirish.
+    lecture_subitems:
+      - "1. Rekurrentlikdan voz kechish: \"Self-Attention\" bilan parallellashtirish."
+      - "2. Transformerning asosiy komponentlari: \"Multi-Head Attention\" va \"Positional Encodings\"."
+      - "3. Transformer arxitekturasini abstrakt matnni umumlashtirishda qo'llash."
+      - "4. Umumlashtirish natijalarini ROUGE metrikasi bilan baholash."
+    seminal_paper: >
+      Vaswani, A., Shazeer, N., Parmar, N., et al. (2017).
+      Attention Is All You Need. NeurIPS 30.
+    uzbek_angle: >
+      Transformer va o'zbek erkin so'z tartibi: positional encoding erkin tartib
+      muammosini qanchalik hal qiladi? Self-attention ga SOV va SVO bir xilmi?
+    hand_example:
+      # L12[I] → P12 (Day 13) first assert
+      description: >
+        ROUGE-1 F1: Reference='nlp juda qiziq va foydali' (5 token).
+        Hypothesis='nlp juda foydali' (3 token).
+        Precision = 3/3 = 1.000 (barcha hypothesis tokenlari reference da).
+        Recall    = 3/5 = 0.600 (reference tokenlarining 3/5 i topildi).
+        F1 = 2×1.0×0.6 / (1.0+0.6) = 1.2/1.6 = 0.750.
+      expected_value: "ROUGE-1 P=1.000, R=0.600, F1=0.750"
+    gpu_required: true
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # WEEK 4
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  - type: teaching_day
+    day: 13
+    date: 2026-07-06
+    week: 4
+    practice_official_no: 12
+    practice_topic: >
+      "Transformer" arxitekturasi yordamida matnlardan xulosalar chiqarish.
+    practice_subitems:
+      - "1. Matn va uning qisqa mazmuni juftliklaridan iborat ma'lumotlar to'plamini tayyorlash."
+      - "2. \"TensorFlow\" yoki \"PyTorch\" kutubxonalari yordamida transformerning Enkoder-Dekoder arxitekturasini qurish."
+      - "3. \"Self-Attention\" va \"Positional Encoding\" qatlamlarini implementatsiya qilish."
+      - "4. Modelni o'qitish va yangi matnlar uchun qisqa mazmun generatsiya qilish."
+    # Kaggle-hardware: d_model=128, 4 heads, 2 layers, vocab=5000, T4 16GB.
+    # Most architecture code in periphery; core = self-attention + pos-encoding + training loop.
+    periphery:
+      - "Wikipedia Uzbek lead-sentence juftlari yuklash (to'liq beriladi)"
+      - "Custom BPE tokenizer (sentencepiece, vocab=5000) (to'liq beriladi)"
+      - "Encoder-Decoder scaffold: layer norm, FFN, residual (to'liq beriladi)"
+    core:
+      - "ScaledDotProductAttention + MultiHeadAttention implementatsiyasi"
+      - "PositionalEncoding (sinusoidal) implementatsiyasi"
+      - "Mini-training loop (10 epoch, GPU); ROUGE-1 baholash"
+    capstone_module:
+      name: "TransformerSummarizer"
+      file: "capstone/modules/m12_transformer_summarizer.py"
+      interface: "train(src_texts, tgt_texts, epochs) / summarize(text: str) -> str / rouge1(refs, hyps) -> float"
+      consumed_by: [15, 16]
+    corpus_subset: uz_wiki_summ   # RESOLVED C3 — CC-BY-SA, from own uzwiki dump pipeline
+    lecture_official_no: 13
+    lecture_topic: >
+      "Transfer Learning" va oldindan o'qitilgan modellar (BERT, T5).
+    lecture_subitems:
+      - "1. \"Transfer Learning\" paradigmasi: \"Pre-training\" va \"Fine-tuning\"."
+      - "2. BERT modeli."
+      - "3. T5 (\"Text-to-Text Transfer Transformer\")."
+      - "4. \"Hugging Face\" ekotizimi va uning ahamiyati."
+    seminal_paper: >
+      Devlin, J., Chang, M., Lee, K., Toutanova, K. (2019). BERT: Pre-training of
+      Deep Bidirectional Transformers for Language Understanding. NAACL-HLT 2019.
+    uzbek_angle: >
+      BERT tokenizatsiya o'zbek uchun: mBERT WordPiece o'zbek qo'shimchalarini
+      noto'g'ri kesadi — 'o'rganaman' → 5 subword token. XLM-RoBERTa
+      SentencePiece bilan solishtirish.
+    hand_example:
+      # L13[I] → P13 (Day 14) first assert
+      description: >
+        BCE yo'qotish funksiyasi: logit=2.0 (ijobiy sinf).
+        p = σ(2.0) = 1/(1+e^{-2.0}) = 1/(1+0.1353) = 1/1.1353 ≈ 0.880.
+        BCE = -log(0.880) = -(-0.128) ≈ 0.128.
+        Ishonchli to'g'ri bashorat → past yo'qotish.
+      expected_value: "σ(2.0)≈0.880; BCE loss≈0.128"
+    gpu_required: true
+
+  - type: teaching_day
+    day: 14
+    date: 2026-07-07
+    week: 4
+    practice_official_no: 13
+    practice_topic: >
+      "Hugging Face" bilan nozik sozlash amaliyoti.
+    practice_subitems:
+      - "1. \"Hugging Face transformers\" va \"datasets\" kutubxonalarini o'rnatish va tanishish."
+      - "2. Oldindan o'qitilgan BERT modelini sentiment tahlili vazifasi uchun nozik sozlash (\"fine-tuning\")."
+      - "3. \"Trainer API\" yordamida o'qitish jarayonini soddalashtirish."
+      - "4. Nozik sozlangan modelni baholash va uni paylayn yordamida ishlatish."
+    # VERIFIED DATASET:
+    verified_dataset:
+      name: "risqaliyevds/uzbek-sentiment-analysis"
+      url:  "https://huggingface.co/datasets/risqaliyevds/uzbek-sentiment-analysis"
+      license: "MIT"
+      size: "352 151 qator; amaliyotda 5 000 subsample (2 500 pos + 2 500 neg)"
+      labels: "reyting 1–5; binarizatsiya: {4,5}→ijobiy, {1,2}→salbiy, 3-chi sinf tashlanadi"
+      load_code: "load_dataset('risqaliyevds/uzbek-sentiment-analysis')"
+      task: "binary sentiment (ijobiy/salbiy)"
+      verdict: "VERIFIED ✓ — real Uzbek e-commerce reviews, MIT, suitable for P13."
+    periphery:
+      - "Uzum Market sharhlarini yuklash va binarizatsiya (to'liq beriladi)"
+      - "AutoTokenizer tokenizatsiya + DataCollatorWithPadding (to'liq beriladi)"
+    core:
+      - "AutoModelForSequenceClassification.from_pretrained('distilbert-base-multilingual-cased')"
+      - "TrainingArguments: lr=2e-5, batch=16, epochs=3, warmup_steps=100"
+      - "Trainer.train() + evaluate(); classification_report"
+    capstone_module:
+      name: "FineTunedClassifier"
+      file: "capstone/modules/m13_bert_classifier.py"
+      interface: "fit(texts, labels, model_name) / predict(text: str) -> str / predict_proba(text) -> dict / save(path) / load(path)"
+      consumed_by: [16]   # Day 16 (P15 LangChain agent uses it as a tool)
+                          # Also consumed by M4 (P16 FastAPI deploys m13)
+    corpus_subset: uz_sentiment_uzum
+    lecture_official_no: 14
+    lecture_topic: >
+      RAG va vektor ma'lumotlar bazalari.
+    lecture_subitems:
+      - "1. LLM cheklovlari (gallyutsinatsiyalar) va RAG yondashuvi."
+      - "2. RAG jarayoni: tashqi manbalardan ma'lumot qidirish va javob yaratish."
+      - "3. Zamonaviy qidiruvda vektor embeddinglarining o'rni."
+      - "4. Vektor ma'lumotlar bazalari (\"Pinecone\", \"Weaviate\") va ularning RAG tizimlaridagi roli."
+    seminal_paper: >
+      Lewis, P., Perez, E., Piktus, A., et al. (2020). Retrieval-Augmented
+      Generation for Knowledge-Intensive NLP Tasks. NeurIPS 33.
+    uzbek_angle: >
+      RAG va o'zbek huquqiy matnlar: lex.uz qonunchilik hujjatlari bazasi —
+      hallucination xavfi yuqori domenlarda RAG ayniqsa muhim.
+      O'zbek tilida LLM javoblari qanchalik ishonchli?
+    hand_example:
+      # L14[I] → P14 (Day 15) first assert
+      description: >
+        RAG prompt token hisobi: 3 ta retrieved chunk (har biri ≈200 token)
+        + instruction template (≈100 token) = 700 token.
+        LLM kontekst oynasiga nisbatan: 700/128000 < 1%.
+        Javob hallyusinatsiya o'rniga kontekstga tayanadi.
+      expected_value: "prompt ≈ 700 token; retrieved_docs=3; cost ≈ minimal"
+    gpu_required: true
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # M4: THREE async tasks issued Wed 8-iyul, all due before Day 15 (09:30 Thu).
+  #
+  # FLIPPED CLASSROOM NOTE: P16 (FastAPI/Docker) runs on M4 (Wed 8-iyul)
+  # BEFORE L16 (MLOps formal lecture, Fri 10-iyul). This is deliberate:
+  # tinglovchilar get hands-on deployment experience first; L16 then
+  # formalizes the MLOps concepts they have already practised.
+  #
+  # Task A — P16 FastAPI guided notebook (2 h, counts as P16 practice hours)
+  # Task B — Knowledge test (async take-home, ~30 questions, covers L1–L14)
+  #           Issued Wed; due by 09:00 Thu (before Day 15 starts).
+  # Task C — Agent integration PREP (self-directed, ~1 h):
+  #           Set up LangChain scaffold with tool stubs for m13/m14/m12/m04.
+  #           Goal: P15 on Day 16 is WIRING + POLISH, not a first build.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: milestone
+    id: w4
+    date: 2026-07-08
+    week: 4
+    title: "4-hafta milestone: Deploy + Test + Agent scaffold"
+    flipped_classroom: true    # P16 precedes L16 intentionally
+    # ── Task A: P16 ───────────────────────────────────────────────────────
+    practice_official_no: 16
+    practice_topic: >
+      NLP modelini API sifatida joylashtirish.
+    practice_subitems:
+      - "1. O'qitilgan sentiment tahlili modelini saqlash."
+      - "2. \"FastAPI\" yordamida oddiy veb server yaratish va modelni yuklash."
+      - "3. Matnni qabul qilib, bashorat natijasini JSON formatida qaytaradigan API endpointini yaratish."
+      - "4. \"Dockerfile\" yaratib, \"FastAPI\" ilovasini konteynerga o'rash va uni lokal ravishda ishga tushirish."
+    notebook_style: "fully_worked_primm"   # no faded-scaffold core — all code given
+    consultation_support: true
+    capstone_module:
+      name: "SentimentAPI"
+      file: "capstone/app.py"
+      interface: "FastAPI app: POST /predict → {text: str} → {sentiment: str, confidence: float}"
+      consumed_by: []   # deployed artifact — final product of Week 4 milestone
+    modules_available_at_m4: [1,2,3,4,5,6,7,8,9,10,11,12,13]
+    # ── Task B: Knowledge test ────────────────────────────────────────────
+    knowledge_test:
+      format:   "final_test.docx + final_test.xlsx (answer key)"
+      scope:    "L1–L14 (all lectures before Day 15)"
+      duration: "~30 questions, self-timed; async"
+      issued:   2026-07-08
+      due:      "2026-07-09 09:00 (before Day 15 practice)"
+      deliverable_format: "DOCX + XLSX → course/final_test.{docx,xlsx}"
+    # ── Task C: Agent prep ────────────────────────────────────────────────
+    agent_prep:
+      desc: >
+        Async (self-directed, ~1 h). Create capstone/modules/m15_langchain_agent.py
+        scaffold: import m13/m14/m12/m04; define LangChain Tool objects for each;
+        stub out the AgentExecutor. Code does NOT need to run end-to-end yet.
+        Goal: Day 16 P15 session = wiring + polish, not first encounter.
+      deliverable: "m15_langchain_agent.py with Tool stubs committed by 09:00 Thu"
+    gpu_required: false
+    corpus_subset: null
+
+  - type: teaching_day
+    day: 15
+    date: 2026-07-09
+    week: 4
+    # Morning (P14): RAG engine build.
+    # After L15 lecture (afternoon): tinglovchilar continue agent wiring using
+    # the scaffold from M4 Task C — this is self-directed overlap, not a
+    # separate session. Day 16 P15 starts from a working scaffold, not scratch.
+    practice_official_no: 14
+    practice_topic: >
+      Sodda RAG tizimini qurish.
+    practice_subitems:
+      - "1. Bir nechta hujjatdan iborat bilimlar bazasini yaratish."
+      - "2. \"FAISS\" yoki \"ChromaDB\" kabi vektor ma'lumotlar bazasini o'rnatish va hujjatlarni embedding qilib indekslash."
+      - "3. Foydalanuvchi so'roviga eng mos hujjat qismini vektor qidiruvi orqali topish."
+      - "4. Topilgan kontekstni LLM so'roviga qo'shib, savolga javob generatsiya qilish."
+    periphery:
+      - "sentence-transformers paraphrase-multilingual-MiniLM-L12-v2 yuklash (to'liq)"
+      - "FAISS IndexFlatIP sozlash + LLM API ulanish (to'liq beriladi)"
+    core:
+      - "Hujjat chunking (RecursiveCharacterTextSplitter) va batched embedding"
+      - "FAISS index qurish, saqlash, yuklash"
+      - "retrieve() + format_prompt() + llm_call() pipeline"
+    capstone_module:
+      name: "RAGEngine"
+      file: "capstone/modules/m14_rag_engine.py"
+      interface: "index(texts) / answer(question: str, k: int) -> dict[str, Any]  # {'answer','sources','confidence'}"
+      consumed_by: [16]
+    corpus_subset: uz_kb
+    lecture_official_no: 15
+    lecture_topic: >
+      Sun'iy intellekt agentlarini yaratish.
+    lecture_subitems:
+      - "1. Agent tizimlari: \"ReAct\" (Fikrlash + Harakat) namunasi."
+      - "2. LLM imkoniyatlarini kengaytirish: funksiyalarni chaqirish va vositalardan foydalanish."
+      - "3. Tashqi APIlar bilan ishlaydigan agentlar arxitekturasi va NLP modellarini API sifatida joylashtirish."
+      - "4. \"LangChain\" va agentlik tizimlari arxitekturasi."
+    seminal_paper: >
+      Yao, S., Zhao, J., Yu, D., et al. (2022). ReAct: Synergizing Reasoning
+      and Acting in Language Models. ICLR 2023.
+    uzbek_angle: >
+      LLM agent va o'zbek: ReAct tizimida o'zbek tilida fikrlash qanchalik
+      ishonchli? Tool chaqiruv o'zbek tilida berilgan vazifani tushuna oladimi?
+    hand_example:
+      # L15[I] → P15 (Day 16) first assert
+      description: >
+        LangChain ReAct 1-qadam: query="Uzum Market ilovasi yaxshimi?"
+        Tools=[sentiment_classify, retrieve_docs, summarize].
+        Thought: "Hissiyot tahlili kerak → sentiment_classify ni chaqiraman."
+        Action: sentiment_classify(text="Uzum Market ilovasi yaxshimi?")
+        Observation: {sentiment: ijobiy, confidence: 0.82}
+        Agent summarize ni emas, sentiment_classify ni tanlashi kerak.
+      expected_value: "correct_tool=sentiment_classify; action_confidence>0.7"
+    gpu_required: false
+
+  - type: teaching_day
+    day: 16
+    date: 2026-07-10
+    week: 4
+    # Morning: P15 (LangChain agent) — WIRING + POLISH only.
+    #   Scaffold was built in M4 Task C; partial wiring done Day 15 (post-L15).
+    #   This session connects all modules into a running agent, tests edge cases,
+    #   and polishes the demo — it is NOT the first encounter with LangChain.
+    # Afternoon: L16 (MLOps — formalizes concepts from M4 P16 flipped practice)
+    #   + capstone defense Q&A.
+    # Knowledge test: issued M4, submitted before Day 15 — NOT part of this day.
+    practice_official_no: 15
+    practice_topic: >
+      LangChain yordamida Sun'iy intellekt (AI) agentini yaratish.
+    practice_subitems:
+      - "1. \"LangChain\" kutubxonasidagi LLMlar, so'rovlar, vositalar bilan tanishish."
+      - "2. Sun'iy intellekt agentiga integratsiya qilish uchun oddiy vositalarni aniqlash."
+      - "3. \"ReAct\" agentini yaratish va unga vositalardan foydalanish imkoniyatini berish."
+      - "4. Agentga murakkabroq vazifa berib, uning ishlashini kuzatish."
+    session_role: "wiring_and_polish"   # M4 scaffold + Day 15 partial wiring; not first build
+    periphery:
+      - "LangChain Tool, AgentExecutor, create_react_agent (to'liq beriladi)"
+      - "m12 (TransformerSummarizer), m14 (RAGEngine), m13 (FineTunedClassifier) import (to'liq)"
+      - "Tool stubs from M4 Task C scaffold (to'liq beriladi — tinglovchi o'zi yozgan)"
+    core:
+      - "Barcha tool sinflarini to'liq implementatsiya qilish va AgentExecutor ga ulash"
+      - "ReAct agent: Thought→Action→Observation siklining 3 qadamda kuzatilishi"
+      - "Murakkab vazifa: hujjat tahlili → sentiment → RAG javob → xulosa; demo tozalash"
+    capstone_module:
+      name: "DocumentAssistantAgent"
+      file: "capstone/modules/m15_langchain_agent.py"
+      interface: "run(user_message: str) -> str  # full ReAct agent loop"
+      consumed_by: []    # final teaching-day module; defense uses it directly
+    corpus_subset: uz_kb
+    lecture_official_no: 16
+    lecture_topic: >
+      NLP amaliyotida MO' amaliyotlari.
+    lecture_subitems:
+      - "1. Modelni ishlab chiqarishga uzatish bosqichlari."
+      - "2. API yaratish va dokerlashtirish."
+      - "3. Model monitoringi va versiyalash."
+      - "4. CI/CD payplaynlari."
+    lecture_notes: >
+      L16 formalizes MLOps concepts that tinglovchilar already applied in M4
+      P16 (FastAPI/Docker flipped session). Session structure: L16 lecture
+      (60 min) + capstone defense Q&A (20 min, each tinglovchi demos
+      DocumentAssistantAgent and SentimentAPI). Knowledge test was collected
+      before Day 15; not repeated here.
+    seminal_paper: >
+      Sculley, D., et al. (2015). Hidden Technical Debt in Machine Learning Systems.
+      NeurIPS 28. — MLOps, model degradation, monitoring.
+    uzbek_angle: >
+      O'zbek NLP ekotizimi: mavjud open-source modellar (UzBERT, Tahrirchi
+      modellari), ochiq muammolar — labeled data, morfologik tahlilchi,
+      domain-specific LLM. Tinglovchilar hissa qo'sha oladigan yo'nalishlar.
+    hand_example: null   # L16 has no following P session in the teaching schedule
+    gpu_required: false
