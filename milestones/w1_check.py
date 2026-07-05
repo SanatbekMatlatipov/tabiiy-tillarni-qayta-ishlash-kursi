@@ -21,7 +21,7 @@ from pathlib import Path
 
 # ─── yo'llar ──────────────────────────────────────────────────────────────────
 HERE = Path(__file__).resolve().parent          # course/milestones
-REPO = HERE.parent.parent                        # repo ildizi
+REPO = HERE.parent                        # repo ildizi
 MODULES = REPO / "capstone" / "modules"
 sys.path.insert(0, str(MODULES))
 
