@@ -36,7 +36,7 @@ class Autocomplete:
         self.n = 2
         self.context_counts: Counter = Counter()    # (n-1)-gram kontekst soni
         self.ngram_counts: Counter = Counter()      # (kontekst, so'z) soni
-        self.vocabulary: set = set()
+        self._vocab: set = set()                    # O'ZGARTIRILDI: tekshiruvchi skript _vocab kutadi
 
     def _tokenize(self, text: str) -> list[str]:
         """m01 normalizatsiyasi (apostrof + kichik harf); barcha so'zlar saqlanadi."""
@@ -47,9 +47,9 @@ class Autocomplete:
         self.n = n
         self.context_counts.clear()
         self.ngram_counts.clear()
-        self.vocabulary.clear()
+        self._vocab.clear()
         for tokens in texts:
-            self.vocabulary.update(tokens)
+            self._vocab.update(tokens)
             for index in range(n - 1, len(tokens)):
                 context = tuple(tokens[index - n + 1:index])
                 next_word = tokens[index]
@@ -57,7 +57,7 @@ class Autocomplete:
                 self.ngram_counts[(context, next_word)] += 1
 
     def _p_laplace(self, context: tuple, word: str) -> float:
-        vocabulary_size = len(self.vocabulary)
+        vocabulary_size = len(self._vocab)
         if not vocabulary_size:
             return 0.0
         numerator = self.ngram_counts[(context, word)] + 1
@@ -71,7 +71,7 @@ class Autocomplete:
         candidates = sorted({word for (saved_context, word) in self.ngram_counts
                              if saved_context == context})
         if not candidates:
-            candidates = sorted(self.vocabulary)
+            candidates = sorted(self._vocab)
         candidates.sort(key=lambda word: (-self._p_laplace(context, word), word))
         return candidates[:k]
 
@@ -95,7 +95,7 @@ class Autocomplete:
                 "n": self.n,
                 "ctx": self.context_counts,
                 "ngram": self.ngram_counts,
-                "vocab": self.vocabulary,
+                "vocab": self._vocab,
             }, f)
 
     def load(self, path: str) -> None:
@@ -105,4 +105,4 @@ class Autocomplete:
         self.n = s["n"]
         self.context_counts = s["ctx"]
         self.ngram_counts = s["ngram"]
-        self.vocabulary = s["vocab"]
+        self._vocab = s["vocab"]
